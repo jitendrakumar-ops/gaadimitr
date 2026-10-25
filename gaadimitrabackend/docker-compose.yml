@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vehicle-booking-api
+    restart: unless-stopped
+    ports:
+      - '5001:5001'
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
+      - MONGODB_URI=mongodb://mongo:27017/vehicle_booking
+      - REDIS_URL=redis://redis:6379
+      - JWT_ACCESS_SECRET=production_jwt_access_secret_min_32_characters_long
+      - JWT_REFRESH_SECRET=production_jwt_refresh_secret_min_32_characters_long
+      - JWT_ACCESS_EXPIRY=15m
+      - JWT_REFRESH_EXPIRY=7d
+      - CORS_ORIGIN=*
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - booking-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: vehicle-booking-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    networks:
+      - booking-network
+  mongo:
+    image: mongo:7.0
+    container_name: vehicle-booking-mongo
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - booking-network
+
+volumes:
+  mongo-data:
+  redis-data:
+
+networks:
+  booking-network:
+    driver: bridge
